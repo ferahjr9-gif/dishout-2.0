@@ -18,12 +18,18 @@ const Privacy: React.FC = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-[#FF4500] mb-4">2. Image Retention Policy</h2>
+          <h2 className="text-xl font-semibold text-[#FF4500] mb-4">2. Image Retention & Sharing</h2>
           <p>
-            Images uploaded for analysis are processed by Gemini 2.5 Flash. We maintain a strict 
-            <strong>30-day retention policy</strong> for analyzed images to improve service quality, after which 
-            they are permanently deleted from our servers. You may request immediate deletion at any time 
-            via our Data Rights Request portal.
+            Images uploaded for analysis are processed by Gemini 2.5 Flash. To facilitate the "WhatsApp Order" feature, 
+            a temporary, shareable link is generated for your dish photo.
+          </p>
+          <ul className="list-disc pl-5 mt-2 space-y-1 text-sm text-gray-400">
+            <li>These images are stored securely in Netlify Blobs.</li>
+            <li>The shareable links included in WhatsApp messages <strong>expire automatically after 30 days</strong>.</li>
+            <li>After expiration, the images are permanently deleted from our servers.</li>
+          </ul>
+          <p className="mt-4">
+            You may request immediate deletion at any time via our Data Rights Request portal.
           </p>
         </section>
 

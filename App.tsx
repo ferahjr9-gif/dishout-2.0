@@ -5,6 +5,7 @@ import Terms from './pages/Terms';
 import SizzleLoader from './components/SizzleLoader';
 import AuthForm from './components/AuthForm';
 import { GeminiService } from './services/geminiService';
+import { apiService } from './services/apiService';
 import { AppState, DishAnalysisResult, LocationData } from './types';
 import { COLORS, GEMINI_API_KEY } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +15,7 @@ const App: React.FC = () => {
   const [currentPage, setCurrentPage] = useState('home');
   const [appState, setAppState] = useState<AppState>(AppState.IDLE);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [analysisResult, setAnalysisResult] = useState<DishAnalysisResult | null>(null);
   const [location, setLocation] = useState<LocationData | undefined>(undefined);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -78,11 +80,18 @@ const App: React.FC = () => {
     if (!file) return;
 
     setAppState(AppState.ANALYZING);
+    setUploadedImageUrl(null); // Reset previous upload
 
     try {
       // Convert to JPEG to avoid "Unsupported MIME type: image/avif" errors
       const base64Jpeg = await convertToJpeg(file);
       setImagePreview(base64Jpeg);
+      
+      // Upload image for sharing in parallel with analysis
+      apiService.uploadDishImage(base64Jpeg)
+        .then(url => setUploadedImageUrl(url))
+        .catch(err => console.error("Background image upload failed", err));
+
       processImage(base64Jpeg);
     } catch (err) {
       console.error("Image processing error:", err);
@@ -148,6 +157,47 @@ const App: React.FC = () => {
     setAppState(AppState.IDLE);
     setImagePreview(null);
     setAnalysisResult(null);
+    setUploadedImageUrl(null);
+  };
+
+  const formatUAEPhone = (phone: string) => {
+    const digits = phone.replace(/\D/g, '');
+    if (digits.startsWith('971')) {
+      const rest = digits.slice(3);
+      // Mobile (starts with 5): 9 digits after 971
+      if (rest.startsWith('5')) return '971' + rest.slice(0, 9);
+      // Dubai Landline (starts with 4): 8 digits after 971
+      if (rest.startsWith('4')) return '971' + rest.slice(0, 8);
+    }
+    return digits;
+  };
+
+  const handleWhatsAppClick = (e: React.MouseEvent, phone: string | undefined, title: string | undefined) => {
+    e.preventDefault();
+    if (!phone) return;
+
+    const cleanPhone = formatUAEPhone(phone);
+    const dishName = analysisResult?.dishName || "Unknown Dish";
+    
+    // Construct message with image link if available
+    let message = `Hi! I found ${title || 'your restaurant'} on DishOut and I'd like to place an order for ${dishName}.`;
+    if (uploadedImageUrl) {
+      message += ` Here's the dish I'm looking for: ${uploadedImageUrl}`;
+    }
+
+    const whatsappUrl = `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`;
+
+    // Track Lead
+    apiService.trackLead({
+      dishName: dishName,
+      restaurantName: title || "Unknown Restaurant",
+      restaurantPhone: cleanPhone,
+      userEmail: currentUser?.email,
+      timestamp: new Date().toISOString(),
+      dishImageUrl: uploadedImageUrl
+    });
+
+    window.open(whatsappUrl, '_blank');
   };
 
   const renderContent = () => {
@@ -158,13 +208,6 @@ const App: React.FC = () => {
     return (
       <main className="min-h-screen flex flex-col pt-24 px-4 pb-12 max-w-2xl mx-auto">
         
-        {/* API Key Check Warning */}
-        {!GEMINI_API_KEY && (
-          <div className="mb-6 p-4 bg-red-900/30 border border-red-500/50 rounded-xl text-red-200 text-sm">
-            <strong>Configuration Needed:</strong> Please add your GEMINI_API_KEY to the environment variables or constants.ts file.
-          </div>
-        )}
-
         <AnimatePresence mode="wait">
           
           {/* IDLE STATE */}
@@ -254,14 +297,9 @@ const App: React.FC = () => {
                    analysisResult.groundingChunks
                      .filter(chunk => chunk.maps)
                      .map((chunk, idx) => {
-                      // Prepare WhatsApp Link
                       const rawPhone = chunk.maps?.phoneNumber;
-                      const cleanPhone = rawPhone ? rawPhone.replace(/[^\d+]/g, '') : '';
-                      const hasPhone = cleanPhone.length > 5; // Basic validation
-                      
-                      const whatsappUrl = hasPhone
-                        ? `https://wa.me/${cleanPhone}?text=Hi! I found ${chunk.maps?.title} on DishOut and I'd like to place an order for ${analysisResult.dishName}.`
-                        : `https://wa.me/?text=Hi! I'm looking to order ${analysisResult.dishName}.`; // Fallback to generic if no phone found
+                      const cleanPhone = rawPhone ? formatUAEPhone(rawPhone) : '';
+                      const hasPhone = cleanPhone.length > 5; 
 
                       return (
                         <motion.div 
@@ -269,7 +307,7 @@ const App: React.FC = () => {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.1 }}
-                          className="p-5 rounded-2xl bg-[#1e1e1e] border border-white/5 hover:border-[#FF4500]/50 transition-colors duration-300"
+                          className="p-5 rounded-2xl bg-[#1e1e1e] border border-white/5 hover:border-[#FF4500]/50 transition-colors duration-300 relative"
                         >
                           <div className="flex justify-between items-start">
                             <div>
@@ -292,20 +330,23 @@ const App: React.FC = () => {
                               View Map
                             </a>
                             
-                            {/* WhatsApp Bridge */}
+                            {/* WhatsApp Bridge with Lead Tracking */}
                             <a 
-                              href={whatsappUrl} 
-                              target="_blank" 
-                              rel="noopener noreferrer"
+                              href="#"
+                              onClick={(e) => hasPhone ? handleWhatsAppClick(e, rawPhone, chunk.maps?.title) : e.preventDefault()}
                               className={`flex-1 py-2 px-4 rounded-xl text-[#121212] text-xs font-bold text-center transition-all flex items-center justify-center space-x-1 ${
                                 hasPhone ? 'bg-[#25D366] hover:brightness-110' : 'bg-gray-600 cursor-not-allowed opacity-50'
                               }`}
                               title={hasPhone ? `Order via WhatsApp at ${rawPhone}` : "Phone number not available"}
-                              onClick={(e) => { if(!hasPhone) e.preventDefault(); }}
                             >
                               <span>{hasPhone ? 'WhatsApp Order' : 'No Phone'}</span>
                             </a>
                           </div>
+                          {hasPhone && uploadedImageUrl && (
+                            <div className="absolute -bottom-2 right-6 text-[10px] text-gray-500 bg-[#121212] px-2">
+                              Includes dish photo link
+                            </div>
+                          )}
                         </motion.div>
                       );
                   })
