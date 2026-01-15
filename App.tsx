@@ -4,6 +4,7 @@ import Privacy from './pages/Privacy';
 import Terms from './pages/Terms';
 import SizzleLoader from './components/SizzleLoader';
 import AuthForm from './components/AuthForm';
+import DeliverySelector from './components/DeliverySelector';
 import { GeminiService } from './services/geminiService';
 import { apiService } from './services/apiService';
 import { AppState, DishAnalysisResult, LocationData } from './types';
@@ -19,6 +20,10 @@ const App: React.FC = () => {
   const [analysisResult, setAnalysisResult] = useState<DishAnalysisResult | null>(null);
   const [location, setLocation] = useState<LocationData | undefined>(undefined);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  // Delivery Selection State
+  const [showDeliveryModal, setShowDeliveryModal] = useState(false);
+  const [pendingOrder, setPendingOrder] = useState<{phone: string, title: string} | null>(null);
   
   const { currentUser } = useAuth();
   
@@ -176,11 +181,23 @@ const App: React.FC = () => {
     e.preventDefault();
     if (!phone) return;
 
-    const cleanPhone = formatUAEPhone(phone);
+    // Store pending order details and open modal
+    setPendingOrder({ 
+      phone, 
+      title: title || 'Unknown Restaurant' 
+    });
+    setShowDeliveryModal(true);
+  };
+
+  const handleDeliverySelection = (provider: string) => {
+    if (!pendingOrder) return;
+
+    const cleanPhone = formatUAEPhone(pendingOrder.phone);
     const dishName = analysisResult?.dishName || "Unknown Dish";
     
-    // Construct message with image link if available
-    let message = `Hi! I found ${title || 'your restaurant'} on DishOut and I'd like to place an order for ${dishName}.`;
+    // Construct message with delivery provider
+    let message = `Hello, I found ${pendingOrder.title} on DishOut, and I would like to order ${dishName}, I would like my delivery through ${provider}.`;
+    
     if (uploadedImageUrl) {
       message += ` Here's the dish I'm looking for: ${uploadedImageUrl}`;
     }
@@ -190,14 +207,17 @@ const App: React.FC = () => {
     // Track Lead
     apiService.trackLead({
       dishName: dishName,
-      restaurantName: title || "Unknown Restaurant",
+      restaurantName: pendingOrder.title,
       restaurantPhone: cleanPhone,
       userEmail: currentUser?.email,
       timestamp: new Date().toISOString(),
       dishImageUrl: uploadedImageUrl
     });
 
+    // Open WhatsApp and close modal
     window.open(whatsappUrl, '_blank');
+    setShowDeliveryModal(false);
+    setPendingOrder(null);
   };
 
   const renderContent = () => {
@@ -330,14 +350,14 @@ const App: React.FC = () => {
                               View Map
                             </a>
                             
-                            {/* WhatsApp Bridge with Lead Tracking */}
+                            {/* WhatsApp Bridge with Delivery Selector */}
                             <a 
                               href="#"
                               onClick={(e) => hasPhone ? handleWhatsAppClick(e, rawPhone, chunk.maps?.title) : e.preventDefault()}
                               className={`flex-1 py-2 px-4 rounded-xl text-[#121212] text-xs font-bold text-center transition-all flex items-center justify-center space-x-1 ${
                                 hasPhone ? 'bg-[#25D366] hover:brightness-110' : 'bg-gray-600 cursor-not-allowed opacity-50'
                               }`}
-                              title={hasPhone ? `Order via WhatsApp at ${rawPhone}` : "Phone number not available"}
+                              title={hasPhone ? `Order from ${chunk.maps?.title}` : "Phone number not available"}
                             >
                               <span>{hasPhone ? 'WhatsApp Order' : 'No Phone'}</span>
                             </a>
@@ -385,6 +405,15 @@ const App: React.FC = () => {
           )}
 
         </AnimatePresence>
+
+        {/* Delivery Selector Modal */}
+        <DeliverySelector 
+          isOpen={showDeliveryModal}
+          onClose={() => setShowDeliveryModal(false)}
+          onSelect={handleDeliverySelection}
+          restaurantName={pendingOrder?.title || 'Unknown Restaurant'}
+        />
+
       </main>
     );
   };
