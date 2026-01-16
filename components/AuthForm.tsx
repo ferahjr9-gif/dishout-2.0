@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { COLORS } from '../constants';
 
 interface AuthFormProps {
   onSuccess: () => void;
@@ -57,7 +58,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-[#FF4500] focus:ring-1 focus:ring-[#FF4500] transition-all"
+            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-[#4ADE80] focus:ring-1 focus:ring-[#4ADE80] transition-all"
             placeholder="chef@example.com"
           />
         </div>
@@ -69,7 +70,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-[#FF4500] focus:ring-1 focus:ring-[#FF4500] transition-all"
+            className="w-full px-4 py-3 rounded-xl bg-black/20 border border-white/10 text-white focus:outline-none focus:border-[#4ADE80] focus:ring-1 focus:ring-[#4ADE80] transition-all"
             placeholder="••••••••"
           />
         </div>
@@ -77,7 +78,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         <button
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 rounded-full bg-[#FF4500] font-bold text-white shadow-lg shadow-orange-900/50 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+          className="w-full py-3.5 rounded-full bg-[#4ADE80] font-bold text-[#121212] shadow-lg shadow-green-900/50 hover:scale-[1.02] active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed mt-4"
         >
           {loading ? 'Processing...' : (isLogin ? 'Sign In' : 'Create Account')}
         </button>
@@ -87,7 +88,7 @@ const AuthForm: React.FC<AuthFormProps> = ({ onSuccess }) => {
         {isLogin ? "Don't have an account? " : "Already have an account? "}
         <button
           onClick={() => setIsLogin(!isLogin)}
-          className="text-[#FF4500] hover:text-white font-semibold underline-offset-4 hover:underline transition-colors"
+          className="text-[#4ADE80] hover:text-white font-semibold underline-offset-4 hover:underline transition-colors"
         >
           {isLogin ? 'Sign Up' : 'Log In'}
         </button>

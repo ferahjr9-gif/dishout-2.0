@@ -196,7 +196,7 @@ const App: React.FC = () => {
     const dishName = analysisResult?.dishName || "Unknown Dish";
     
     // Construct message with delivery provider
-    let message = `Hello, I found ${pendingOrder.title} on DishOut, and I would like to order ${dishName}, I would like my delivery through ${provider}.`;
+    let message = `Hello, I found ${pendingOrder.title} on SnapFood, and I would like to order ${dishName}, I would like my delivery through ${provider}.`;
     
     if (uploadedImageUrl) {
       message += ` Here's the dish I'm looking for: ${uploadedImageUrl}`;
@@ -241,7 +241,7 @@ const App: React.FC = () => {
             >
               <h1 className="text-5xl font-bold leading-tight">
                 What's on your <br />
-                <span style={{ color: COLORS.vibrantPersimmon }}>Plate?</span>
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ADE80] to-[#FACC15]">Plate?</span>
               </h1>
               <p className="text-gray-400 max-w-md">
                 Snap a photo. AI identifies the dish and finds the best spots serving it nearby.
@@ -249,10 +249,10 @@ const App: React.FC = () => {
               
               <div 
                 onClick={handleCapture}
-                className="cursor-pointer group relative w-48 h-48 rounded-full flex items-center justify-center border-2 border-dashed border-[#FF4500] hover:bg-[#FF4500]/10 transition-all duration-300"
+                className="cursor-pointer group relative w-48 h-48 rounded-full flex items-center justify-center border-2 border-dashed border-[#4ADE80] hover:bg-[#4ADE80]/10 transition-all duration-300"
               >
                 <div className="text-center space-y-2">
-                  <svg className="w-10 h-10 text-[#FF4500] mx-auto group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="w-10 h-10 text-[#4ADE80] mx-auto group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
@@ -300,7 +300,7 @@ const App: React.FC = () => {
             >
               {/* Header */}
               <div className="relative p-6 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md overflow-hidden">
-                <div className="absolute top-0 right-0 p-4 opacity-20 text-[#FF4500]">
+                <div className="absolute top-0 right-0 p-4 opacity-20 text-[#4ADE80]">
                   <svg className="w-24 h-24" fill="currentColor" viewBox="0 0 24 24"><path d="M11 9H9V2H7v7H5V2H3v7c0 2.12 1.66 3.84 3.75 3.97V22h2.5v-9.03C11.34 12.84 13 11.12 13 9V2h-2v7zm5-3v8h2.5v8H21V2c-2.76 0-5 2.24-5 4z"/></svg>
                 </div>
                 <h2 className="text-3xl font-bold text-white mb-2">{analysisResult.dishName}</h2>
@@ -310,7 +310,7 @@ const App: React.FC = () => {
               </div>
 
               {/* Places */}
-              <h3 className="text-xl font-semibold text-[#FF4500] pl-2">Nearby Gems</h3>
+              <h3 className="text-xl font-semibold text-[#4ADE80] pl-2">Nearby Gems</h3>
               
               <div className="space-y-4">
                 {analysisResult.groundingChunks.length > 0 ? (
@@ -327,7 +327,7 @@ const App: React.FC = () => {
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: idx * 0.1 }}
-                          className="p-5 rounded-2xl bg-[#1e1e1e] border border-white/5 hover:border-[#FF4500]/50 transition-colors duration-300 relative"
+                          className="p-5 rounded-2xl bg-[#1e1e1e] border border-white/5 hover:border-[#4ADE80]/50 transition-colors duration-300 relative"
                         >
                           <div className="flex justify-between items-start">
                             <div>
@@ -380,7 +380,7 @@ const App: React.FC = () => {
 
               <button 
                 onClick={resetApp}
-                className="w-full py-4 mt-8 rounded-full bg-[#FF4500] font-bold text-white shadow-lg shadow-orange-900/50 hover:scale-[1.02] active:scale-95 transition-all"
+                className="w-full py-4 mt-8 rounded-full bg-[#4ADE80] font-bold text-[#121212] shadow-lg shadow-green-900/50 hover:scale-[1.02] active:scale-95 transition-all"
               >
                 Scan Another Dish
               </button>
@@ -419,7 +419,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-gray-100 font-sans selection:bg-[#FF4500] selection:text-white">
+    <div className="min-h-screen text-gray-100 font-sans selection:bg-[#4ADE80] selection:text-[#121212]">
       <Navbar currentPage={currentPage} setCurrentPage={setCurrentPage} />
       {renderContent()}
     </div>

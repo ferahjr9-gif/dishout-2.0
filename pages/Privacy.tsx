@@ -8,9 +8,9 @@ const Privacy: React.FC = () => {
       
       <div className="space-y-8 p-8 rounded-3xl border border-white/10 bg-white/5 backdrop-blur-md">
         <section>
-          <h2 className="text-xl font-semibold text-[#FF4500] mb-4">1. Data Collection & "Just-in-Time" Disclosure</h2>
+          <h2 className="text-xl font-semibold text-[#4ADE80] mb-4">1. Data Collection & "Just-in-Time" Disclosure</h2>
           <p>
-            DishOut adheres to strict 2026 data privacy standards. We only access your Camera and Geolocation 
+            SnapFood adheres to strict 2026 data privacy standards. We only access your Camera and Geolocation 
             data at the specific moment of request ("Just-in-Time"). You will be explicitly prompted 
             by your browser/device to grant these permissions each session, or as configured by your device settings.
             We do not track your location in the background.
@@ -18,7 +18,7 @@ const Privacy: React.FC = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-[#FF4500] mb-4">2. Image Retention & Sharing</h2>
+          <h2 className="text-xl font-semibold text-[#4ADE80] mb-4">2. Image Retention & Sharing</h2>
           <p>
             Images uploaded for analysis are processed by Gemini 2.5 Flash. To facilitate the "WhatsApp Order" feature, 
             a temporary, shareable link is generated for your dish photo.
@@ -34,9 +34,9 @@ const Privacy: React.FC = () => {
         </section>
 
         <section>
-          <h2 className="text-xl font-semibold text-[#FF4500] mb-4">3. Third-Party Sharing & GDPR/CCPA</h2>
+          <h2 className="text-xl font-semibold text-[#4ADE80] mb-4">3. Third-Party Sharing & GDPR/CCPA</h2>
           <p>
-            DishOut connects with Google Maps and WhatsApp. Location data is sent anonymously to Google Maps 
+            SnapFood connects with Google Maps and WhatsApp. Location data is sent anonymously to Google Maps 
             solely to identify nearby restaurants. We do not sell your personal data.
           </p>
           <p className="mt-2">
@@ -47,8 +47,8 @@ const Privacy: React.FC = () => {
         </section>
         
         <section>
-          <h2 className="text-xl font-semibold text-[#FF4500] mb-4">4. Contact</h2>
-          <p>For DPO inquiries: privacy@dishout.app</p>
+          <h2 className="text-xl font-semibold text-[#4ADE80] mb-4">4. Contact</h2>
+          <p>For DPO inquiries: privacy@snapfood.app</p>
         </section>
       </div>
     </div>

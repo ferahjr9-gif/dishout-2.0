@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { COLORS } from '../constants';
 
 type Region = 'UAE' | 'Saudi Arabia' | 'Kuwait' | 'Qatar' | 'Bahrain' | 'Oman' | 'USA' | 'Europe' | 'Asia';
 
@@ -54,7 +53,7 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
             <div className="bg-[#1e1e1e] border border-white/10 w-full max-w-md rounded-3xl p-6 shadow-2xl pointer-events-auto">
               <div className="text-center mb-6">
                 <h3 className="text-2xl font-bold text-white mb-1">How do you want it?</h3>
-                <p className="text-gray-400 text-sm">Ordering from <span className="text-[#FF4500]">{restaurantName}</span></p>
+                <p className="text-gray-400 text-sm">Ordering from <span className="text-[#4ADE80]">{restaurantName}</span></p>
               </div>
 
               {/* Region Selector */}
@@ -66,7 +65,7 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
                   <select
                     value={region}
                     onChange={(e) => setRegion(e.target.value as Region)}
-                    className="w-full appearance-none bg-black/30 border border-white/10 text-white py-3 px-4 rounded-xl focus:outline-none focus:border-[#FF4500] transition-colors"
+                    className="w-full appearance-none bg-black/30 border border-white/10 text-white py-3 px-4 rounded-xl focus:outline-none focus:border-[#4ADE80] transition-colors"
                   >
                     {Object.keys(DELIVERY_PROVIDERS).map((r) => (
                       <option key={r} value={r} className="bg-[#1e1e1e]">{r}</option>
@@ -86,7 +85,7 @@ const DeliverySelector: React.FC<DeliverySelectorProps> = ({
                   <button
                     key={provider}
                     onClick={() => onSelect(provider)}
-                    className="py-3 px-4 rounded-xl bg-white/5 hover:bg-[#FF4500] hover:text-white border border-white/5 hover:border-[#FF4500] transition-all duration-200 text-sm font-medium text-gray-300"
+                    className="py-3 px-4 rounded-xl bg-white/5 hover:bg-[#4ADE80] hover:text-[#121212] border border-white/5 hover:border-[#4ADE80] transition-all duration-200 text-sm font-medium text-gray-300 hover:font-bold"
                   >
                     {provider}
                   </button>

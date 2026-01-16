@@ -32,7 +32,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   useEffect(() => {
     // Check for persisted user in localStorage
-    const storedUser = localStorage.getItem('dishout_user');
+    const storedUser = localStorage.getItem('snapfood_user');
     if (storedUser) {
       try {
         setCurrentUser(JSON.parse(storedUser));
@@ -56,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     setCurrentUser(mockUser);
-    localStorage.setItem('dishout_user', JSON.stringify(mockUser));
+    localStorage.setItem('snapfood_user', JSON.stringify(mockUser));
   };
 
   const signup = async (email: string, password: string) => {
@@ -72,13 +72,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     
     setCurrentUser(mockUser);
-    localStorage.setItem('dishout_user', JSON.stringify(mockUser));
+    localStorage.setItem('snapfood_user', JSON.stringify(mockUser));
   };
 
   const logout = async () => {
     await new Promise(resolve => setTimeout(resolve, 500));
     setCurrentUser(null);
-    localStorage.removeItem('dishout_user');
+    localStorage.removeItem('snapfood_user');
   };
 
   const value = {

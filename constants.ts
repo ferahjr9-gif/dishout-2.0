@@ -6,8 +6,9 @@ export const WHATSAPP_BUSINESS_TOKEN = process.env.WHATSAPP_TOKEN || '';
 export const COLORS = {
   deepCharcoal: '#121212',
   darkOverlay: 'rgba(18, 18, 18, 0.8)',
-  vibrantPersimmon: '#FF4500', // Sizzle Orange
-  persimmonHover: '#CC3700',
+  primary: '#4ADE80', // Vibrant Green
+  primaryHover: '#22C55E', // Darker Green
+  accent: '#FACC15', // Vibrant Yellow
   glassBorder: 'rgba(255, 255, 255, 0.1)',
   glassBg: 'rgba(255, 255, 255, 0.05)',
 };

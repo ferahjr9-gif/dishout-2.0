@@ -12,7 +12,7 @@ const SizzleLoader: React.FC = () => {
         {[...Array(8)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute bottom-4 left-1/2 w-4 h-4 rounded-full bg-[#FF4500]"
+            className={`absolute bottom-4 left-1/2 w-4 h-4 rounded-full ${i % 2 === 0 ? 'bg-[#4ADE80]' : 'bg-[#FACC15]'}`}
             initial={{ y: 0, x: 0, opacity: 0, scale: 0.5 }}
             animate={{
               y: -80 - Math.random() * 50,
@@ -31,17 +31,17 @@ const SizzleLoader: React.FC = () => {
         
         {/* Main "Dish" forming */}
         <motion.div
-          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-20 h-10 bg-orange-600/30 rounded-full blur-md"
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-20 h-10 bg-green-500/30 rounded-full blur-md"
           animate={{ scale: [1, 1.1, 1], opacity: [0.5, 0.8, 0.5] }}
           transition={{ duration: 0.8, repeat: Infinity }}
         />
       </div>
       <motion.p 
-        className="mt-6 text-xl font-light tracking-widest text-[#FF4500] uppercase"
+        className="mt-6 text-xl font-light tracking-widest text-[#4ADE80] uppercase"
         animate={{ opacity: [0.5, 1, 0.5] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >
-        Sizzling Data...
+        Snapping Data...
       </motion.p>
     </div>
   );

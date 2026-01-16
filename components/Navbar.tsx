@@ -11,7 +11,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage }) => {
   const { currentUser, logout } = useAuth();
   
   const navItems = [
-    { id: 'home', label: 'DishOut' },
+    { id: 'home', label: 'SnapFood' },
     { id: 'privacy', label: 'Privacy' },
     { id: 'terms', label: 'Terms' }
   ];
@@ -41,10 +41,10 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage }) => {
       >
         <button 
           onClick={() => setCurrentPage('home')}
-          className="text-2xl font-bold tracking-tighter"
+          className="text-2xl font-bold tracking-tighter flex items-center"
         >
-          <span className="text-white">Dish</span>
-          <span style={{ color: COLORS.vibrantPersimmon }}>Out</span>
+          <span className="text-white">Snap</span>
+          <span style={{ color: COLORS.primary }}>Food</span>
         </button>
 
         <div className="flex items-center space-x-6">
@@ -54,7 +54,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage }) => {
                 key={item.id}
                 onClick={() => setCurrentPage(item.id)}
                 className={`text-sm font-medium transition-colors duration-200 ${
-                  currentPage === item.id ? 'text-[#FF4500]' : 'text-gray-400 hover:text-white'
+                  currentPage === item.id ? 'text-[#4ADE80]' : 'text-gray-400 hover:text-white'
                 }`}
               >
                 {item.label}
@@ -69,7 +69,7 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage }) => {
             className={`text-sm font-bold px-4 py-1.5 rounded-lg transition-all ${
               currentUser 
                 ? 'text-gray-300 hover:text-white hover:bg-white/10' 
-                : 'bg-[#FF4500] text-white hover:bg-[#CC3700] shadow-lg shadow-orange-900/20'
+                : 'bg-[#4ADE80] text-[#121212] hover:bg-[#22C55E] shadow-lg shadow-green-900/20'
             }`}
           >
             {currentUser ? 'Sign Out' : 'Sign In'}
