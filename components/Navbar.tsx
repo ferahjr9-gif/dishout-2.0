@@ -1,6 +1,7 @@
 import React from 'react';
 import { COLORS } from '../constants';
 import { useAuth } from '../contexts/AuthContext';
+import AnimatedLogo from './AnimatedLogo';
 
 interface NavbarProps {
   currentPage: string;
@@ -41,10 +42,28 @@ const Navbar: React.FC<NavbarProps> = ({ currentPage, setCurrentPage }) => {
       >
         <button 
           onClick={() => setCurrentPage('home')}
-          className="text-2xl font-bold tracking-tighter flex items-center"
+          className="flex items-center hover:opacity-90 transition-opacity group"
+          aria-label="SnapFood Home"
         >
-          <span className="text-white">Snap</span>
-          <span style={{ color: COLORS.primary }}>Food</span>
+          <div className="flex items-center tracking-tighter select-none font-bold font-['Space_Grotesk']">
+            {/* 'Snap' in White */}
+            <span className="text-2xl md:text-3xl text-white">Snap</span>
+            
+            {/* 'Food' with Infinity Symbol */}
+            <div className="flex items-center ml-px">
+              {/* 'F' in Green */}
+              <span className="text-2xl md:text-3xl text-[#4ADE80]">F</span>
+              
+              {/* Animated Icon (Yellow) - Replaces 'oo' */}
+              {/* Negative margins to pull F and d closer */}
+              <div className="-mx-1 md:-mx-1.5 flex items-center justify-center pt-1.5 md:pt-2">
+                <AnimatedLogo />
+              </div>
+              
+              {/* 'd' in Green */}
+              <span className="text-2xl md:text-3xl text-[#4ADE80]">d</span>
+            </div>
+          </div>
         </button>
 
         <div className="flex items-center space-x-6">
