@@ -55,6 +55,8 @@ const DEFAULT_TRENDING: TrendingDish[] = [
 
 export const apiService = {
   uploadDishImage: async (base64Data: string): Promise<string> => {
+    // If running on a static host without the backend API configured, return empty string gracefully
+    // to allow the frontend to continue functioning (just without the image link in WhatsApp)
     try {
       const response = await fetch('/api/upload-dish-image', {
         method: 'POST',
@@ -62,15 +64,20 @@ export const apiService = {
         body: JSON.stringify({ image: base64Data }),
       });
 
+      if (response.status === 404 || response.status === 500) {
+        console.warn("Backend API not found or failed. Proceeding in offline/static mode.");
+        return "";
+      }
+
       if (!response.ok) {
-        console.warn("Image upload failed, proceeding without shareable link.");
         return "";
       }
       
       const data = await response.json();
       return data.url;
     } catch (error) {
-      console.error("Error uploading dish image:", error);
+      // SIlent failure acceptable here
+      console.warn("Upload service unavailable");
       return "";
     }
   },
@@ -81,41 +88,31 @@ export const apiService = {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(leadData),
-      }).catch(e => console.error("Background lead tracking failed", e));
+      }).catch(() => {
+        // Ignore errors for analytics tracking
+      });
     } catch (e) {
-      console.error("Failed to initiate lead tracking", e);
+      // Ignore
     }
   },
 
-  /**
-   * Retrieves the current trending dishes.
-   * Merges default data with local user activity to simulate a dynamic backend.
-   */
   getTrendingDishes: async (): Promise<TrendingDish[]> => {
-    // Simulate network delay
-    // await new Promise(resolve => setTimeout(resolve, 300));
-
     try {
       const stored = localStorage.getItem('snapfood_trending');
       let localData: TrendingDish[] = stored ? JSON.parse(stored) : [];
 
-      // Merge defaults if they don't exist in local data
       DEFAULT_TRENDING.forEach(defItem => {
         if (!localData.find(d => d.name === defItem.name)) {
           localData.push(defItem);
         }
       });
 
-      // Sort by popularity (descending) and take top 6
       return localData.sort((a, b) => b.popularity - a.popularity).slice(0, 6);
     } catch (e) {
       return DEFAULT_TRENDING;
     }
   },
 
-  /**
-   * Records a user search or identification to update trending stats.
-   */
   recordInteraction: async (term: string): Promise<void> => {
     try {
       const cleanTerm = term.trim();
@@ -129,11 +126,8 @@ export const apiService = {
       );
 
       if (existingIndex > -1) {
-        // Boost existing item
         localData[existingIndex].popularity += 5;
       } else {
-        // Add new item
-        // Try to match an image keyword
         let imgUrl = IMAGE_BANK['default'];
         const lowerTerm = cleanTerm.toLowerCase();
         
@@ -146,18 +140,15 @@ export const apiService = {
 
         const newItem: TrendingDish = {
           id: `t-${Date.now()}`,
-          name: cleanTerm.replace(/\b\w/g, l => l.toUpperCase()), // Capitalize
+          name: cleanTerm.replace(/\b\w/g, l => l.toUpperCase()), 
           query: `Best ${cleanTerm} nearby`,
           image: imgUrl,
-          popularity: 50 // Start with base popularity
+          popularity: 50 
         };
         localData.push(newItem);
       }
 
-      // Save back to storage
       localStorage.setItem('snapfood_trending', JSON.stringify(localData));
-      
-      // In a real app, this would be a POST to /api/record-search
     } catch (e) {
       console.error("Failed to record interaction", e);
     }
