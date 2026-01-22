@@ -7,7 +7,7 @@ import AuthForm from './components/AuthForm';
 import DeliverySelector from './components/DeliverySelector';
 import { GeminiService } from './services/geminiService';
 import { apiService } from './services/apiService';
-import { AppState, DishAnalysisResult, LocationData } from './types';
+import { AppState, DishAnalysisResult, LocationData, TrendingDish } from './types';
 import { COLORS, GEMINI_API_KEY } from './constants';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from './contexts/AuthContext';
@@ -21,6 +21,9 @@ const App: React.FC = () => {
   const [location, setLocation] = useState<LocationData | undefined>(undefined);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   
+  // Trending Data State
+  const [trendingDishes, setTrendingDishes] = useState<TrendingDish[]>([]);
+
   // Delivery Selection State
   const [showDeliveryModal, setShowDeliveryModal] = useState(false);
   const [pendingOrder, setPendingOrder] = useState<{phone: string, title: string} | null>(null);
@@ -34,8 +37,17 @@ const App: React.FC = () => {
   const geminiService = useRef(new GeminiService(GEMINI_API_KEY));
 
   useEffect(() => {
-    // Just-in-time check could go here, but we do it on action
+    loadTrending();
   }, []);
+
+  const loadTrending = async () => {
+    try {
+      const dishes = await apiService.getTrendingDishes();
+      setTrendingDishes(dishes);
+    } catch (e) {
+      console.error("Failed to load trending", e);
+    }
+  };
 
   const handleCapture = () => {
     setErrorMsg(null);
@@ -138,7 +150,6 @@ const App: React.FC = () => {
       }
 
       // 2. Call Gemini
-      // Since we converted to JPEG in handleFileChange, we hardcode the mimeType
       const mimeType = 'image/jpeg';
       const base64Data = base64Full.split(',')[1];
       
@@ -148,12 +159,62 @@ const App: React.FC = () => {
         locData
       );
 
+      // Track the identified dish for trending
+      if (result.dishName) {
+        await apiService.recordInteraction(result.dishName);
+        loadTrending(); // Refresh trending list
+      }
+
       setAnalysisResult(result);
       setAppState(AppState.RESULTS);
 
     } catch (err: any) {
       console.error(err);
       setErrorMsg(err.message || "Something went wrong.");
+      setAppState(AppState.ERROR);
+    }
+  };
+
+  // Handle Text-Based Queries (Trending & Nearby)
+  const processTextQuery = async (query: string, usePreviewImage?: string) => {
+    if (!currentUser) {
+      setCurrentPage('auth');
+      return;
+    }
+    
+    setAppState(AppState.ANALYZING);
+    setErrorMsg(null);
+    if (usePreviewImage) setImagePreview(usePreviewImage);
+    else setImagePreview(null); // No image for "Nearby" search
+
+    // If searching for "Nearby Gems", we don't record "Find 3 top..." as a dish
+    if (!query.startsWith("Find 3 top")) {
+        // Extract a simple term for trending (e.g., "Best Acai Bowl" -> "Acai Bowl")
+        // Simple heuristic: take the middle words or the query itself if short
+        let term = query.replace("Best ", "").replace(" nearby", "").replace("Where can I get ", "");
+        // Remove "Provide 3 places..." suffix if present
+        term = term.split('.')[0];
+        
+        await apiService.recordInteraction(term);
+        loadTrending();
+    }
+
+    try {
+      let locData: LocationData | undefined = undefined;
+      try {
+        locData = await getLocation();
+        setLocation(locData);
+      } catch (e) {
+        console.log("Location failed, trying generic search");
+      }
+
+      const result = await geminiService.current.searchPlaces(query, locData);
+      setAnalysisResult(result);
+      setAppState(AppState.RESULTS);
+
+    } catch (err: any) {
+      console.error(err);
+      setErrorMsg(err.message || "Failed to search places.");
       setAppState(AppState.ERROR);
     }
   };
@@ -237,37 +298,88 @@ const App: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -20 }}
-              className="flex flex-col items-center justify-center flex-1 space-y-8 text-center mt-12"
+              className="flex flex-col items-center justify-center flex-1 space-y-12 text-center mt-6"
             >
-              <h1 className="text-5xl font-bold leading-tight">
-                What's on your <br />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ADE80] to-[#FACC15]">Plate?</span>
-              </h1>
-              <p className="text-gray-400 max-w-md">
-                Snap a photo. AI identifies the dish and finds the best spots serving it nearby.
-              </p>
-              
-              <div 
-                onClick={handleCapture}
-                className="cursor-pointer group relative w-48 h-48 rounded-full flex items-center justify-center border-2 border-dashed border-[#4ADE80] hover:bg-[#4ADE80]/10 transition-all duration-300"
-              >
-                <div className="text-center space-y-2">
-                  <svg className="w-10 h-10 text-[#4ADE80] mx-auto group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  <span className="text-sm font-medium text-gray-300 uppercase tracking-wide">
-                    {currentUser ? 'Capture Dish' : 'Log In to Scan'}
-                  </span>
+              {/* Hero Section */}
+              <div className="space-y-8">
+                <h1 className="text-5xl font-bold leading-tight">
+                  What's on your <br />
+                  <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#4ADE80] to-[#FACC15]">Plate?</span>
+                </h1>
+                
+                <div 
+                  onClick={handleCapture}
+                  className="cursor-pointer group relative w-48 h-48 mx-auto rounded-full flex items-center justify-center border-2 border-dashed border-[#4ADE80] hover:bg-[#4ADE80]/10 transition-all duration-300"
+                >
+                  <div className="text-center space-y-2">
+                    <svg className="w-10 h-10 text-[#4ADE80] mx-auto group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-gray-300 uppercase tracking-wide">
+                      {currentUser ? 'Capture Dish' : 'Log In to Scan'}
+                    </span>
+                  </div>
+                </div>
+                <input 
+                  type="file" 
+                  ref={fileInputRef} 
+                  className="hidden" 
+                  accept="image/*" 
+                  onChange={handleFileChange}
+                />
+              </div>
+
+              {/* Trending Section - Dynamic from State */}
+              <div className="w-full text-left space-y-4">
+                <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-[#FACC15] animate-pulse"></span>
+                  Trending Now
+                </h3>
+                <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4 snap-x">
+                  {trendingDishes.map((dish) => (
+                    <motion.div
+                      key={dish.id}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      onClick={() => processTextQuery(dish.query, dish.image)}
+                      className="snap-start shrink-0 w-40 h-56 rounded-2xl relative overflow-hidden cursor-pointer group border border-white/5"
+                    >
+                      <img src={dish.image} alt={dish.name} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
+                      <div className="absolute bottom-3 left-3">
+                        <p className="text-sm font-bold text-white leading-tight">{dish.name}</p>
+                        <p className="text-[10px] text-[#4ADE80] mt-1 font-medium flex items-center">
+                          <svg className="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M12.316 3.051a1 1 0 01.633 1.265l-4 12a1 1 0 11-1.898-.632l4-12a1 1 0 011.265-.633zM5.707 6.293a1 1 0 010 1.414L3.414 10l2.293 2.293a1 1 0 11-1.414 1.414l-3-3a1 1 0 010-1.414l3-3a1 1 0 011.414 0zm8.586 0a1 1 0 011.414 0l3 3a1 1 0 010 1.414l-3 3a1 1 0 11-1.414-1.414L16.586 10l-2.293-2.293a1 1 0 010-1.414z"/></svg>
+                          {Math.floor(dish.popularity)} Hits
+                        </p>
+                      </div>
+                    </motion.div>
+                  ))}
                 </div>
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleFileChange}
-              />
+
+              {/* Top Restaurants Nearby Section */}
+              <div className="w-full p-6 rounded-3xl bg-white/5 border border-white/10 text-left relative overflow-hidden">
+                 <div className="absolute top-0 right-0 p-4 opacity-10">
+                   <svg className="w-32 h-32 text-[#4ADE80]" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>
+                 </div>
+                 <h3 className="text-xl font-bold text-white mb-2">Top Spots Around You</h3>
+                 <p className="text-sm text-gray-400 mb-6 max-w-xs">
+                   Discover the highest-rated restaurants in your immediate area powered by live maps data.
+                 </p>
+                 <button 
+                    onClick={() => processTextQuery("Find 3 top rated restaurants near me for dinner. Include phone numbers and reason why.", undefined)}
+                    className="flex items-center space-x-2 px-5 py-2.5 bg-[#1e1e1e] hover:bg-[#4ADE80] hover:text-[#121212] border border-white/10 rounded-xl transition-all font-medium text-sm"
+                 >
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <span>Discover Nearby Gems</span>
+                 </button>
+              </div>
+
             </motion.div>
           )}
 
@@ -280,10 +392,14 @@ const App: React.FC = () => {
               exit={{ opacity: 0 }}
               className="flex flex-col items-center w-full"
             >
-              {imagePreview && (
+              {imagePreview ? (
                 <div className="w-full h-64 rounded-3xl overflow-hidden mb-8 relative border border-white/10 shadow-2xl">
                   <img src={imagePreview} alt="Preview" className="w-full h-full object-cover opacity-60" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#121212] via-transparent to-transparent" />
+                </div>
+              ) : (
+                <div className="w-full h-32 rounded-3xl mb-8 flex items-center justify-center border border-white/10 bg-white/5">
+                   <p className="text-gray-400 text-sm">Scanning Local Area...</p>
                 </div>
               )}
               <SizzleLoader />

@@ -32,6 +32,14 @@ export interface DishAnalysisResult {
   rawText: string;
 }
 
+export interface TrendingDish {
+  id: string | number;
+  name: string;
+  query: string;
+  image: string;
+  popularity: number; // Used for sorting
+}
+
 export enum AppState {
   IDLE = 'IDLE',
   CAPTURING = 'CAPTURING',
